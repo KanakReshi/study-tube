@@ -1,0 +1,58 @@
+/* Custom scrollbar for notes list */
+#notesList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#notesList::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.dark #notesList::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+#notesList::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+#notesList::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Note item animations */
+.note-item {
+    transition: all 0.3s ease;
+}
+
+.note-item:hover {
+    transform: translateY(-1px);
+}
+
+/* Timestamp button styling */
+.timestamp-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transition: all 0.3s ease;
+}
+
+.timestamp-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Dark mode transition */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    #videoNotesContainer .grid {
+        grid-template-columns: 1fr;
+    }
+}
