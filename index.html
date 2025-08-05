@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyTube - Smart Note Taking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'monospace'],
+                        'display': ['Poppins', 'sans-serif']
+                    },
+                    colors: {
+                        'primary': {
+                            50: '#f0f9ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8'
+                        },
+                        'purple': {
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --gradient-5: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --shadow-glow: 0 0 40px rgba(102, 126, 234, 0.3);
+            --shadow-strong: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--gradient-1);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .dark body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 75%, #0f3460 100%);
+        }
+
+        /* Fixed glass morphism with better contrast */
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark .glass {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dark .card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-strong);
+        }
+
+        /* Fixed gradient text with fallback */
+        .gradient-text {
+            background: var(--gradient-1);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-shift 3s ease-in-out infinite;
+            /* Fallback for browsers that don't support background-clip */
+            color: #667eea;
+        }
+
+        /* Ensure gradient text is visible in dark mode */
+        .dark .gradient-text {
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: #818cf8;
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Fixed header text visibility */
+        .header-text {
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark .header-text {
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Fixed space banner with better text contrast */
+        .space-banner {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark .space-banner {
+            background: linear-gradient(135deg, rgba(67, 56, 202, 0.95) 0%, rgba(91, 33, 182, 0.95) 100%);
+        }
+
+        /* Floating particles background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float-particle 8s infinite linear;
+        }
+
+        .dark .particle {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        @keyframes float-particle {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Advanced button animations */
+        .button-primary {
+            background: var(--gradient-1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            color: white !important;
+        }
+
+        .button-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .button-primary:hover::before {
+            left: 100%;
+        }
+
+        .button-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.6);
+        }
+
+        /* Advanced note item animations */
+        .note-item {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(0) scale(1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .note-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--gradient-1);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .note-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .note-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-strong);
+        }
+
+        /* Timestamp button with pulse effect */
+        .timestamp-btn {
+            background: var(--gradient-1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: white !important;
+        }
+
+        .timestamp-btn:hover {
+            transform: translateY(-2px) scale(1.1);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            animation: pulse-glow 1s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6); }
+            50% { box-shadow: 0 8px 35px rgba(102, 126, 234, 0.8); }
+        }
+
+        /* Enhanced theme toggle */
+        .theme-toggle {
+            position: relative;
+            width: 70px;
+            height: 35px;
+            background: var(--gradient-5);
+            border-radius: 17.5px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+        }
+        
+        .dark .theme-toggle {
+            background: var(--gradient-3);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        
+        .theme-toggle::before {
+            content: '☀️';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 25px;
+            height: 25px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .dark .theme-toggle::before {
+            content: '🌙';
+            transform: translateX(35px);
+            background: #1f2937;
+        }
+
+        /* Advanced input animations */
+        .input-field {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            background: rgba(255, 255, 255, 0.95);
+            color: #1f2937 !important;
+            position: relative;
+        }
+
+        .dark .input-field {
+            background: rgba(31, 41, 55, 0.95);
+            color: white !important;
+        }
+
+        .input-field:focus {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+            color: #1f2937 !important;
+        }
+
+        .dark .input-field:focus {
+            background: #1f2937;
+            color: white !important;
+        }
+
+        .input-field::placeholder {
+            color: #6b7280;
+        }
+
+        .dark .input-field::placeholder {
+            color: #9ca3af;
+        }
+
+        /* Space item 3D effect */
+        .space-item {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+            transform-style: preserve-3d;
+        }
+
+        .space-item:hover {
+            transform: perspective(1000px) rotateX(10deg) rotateY(5deg) translateY(-10px) scale(1.02);
+            box-shadow: var(--shadow-strong);
+        }
+
+        /* Loading animation */
+        .loading-dots::after {
+            content: '';
+            animation: loading-dots 1.5s infinite;
+        }
+
+        @keyframes loading-dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* Modal backdrop */
+        .modal {
+            backdrop-filter: blur(15px);
+            background: rgba(0, 0, 0, 0.6);
+            animation: fade-in 0.3s ease;
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Floating emojis */
+        .floating-emoji {
+            animation: float-emoji 4s ease-in-out infinite;
+            transform-origin: center;
+        }
+
+        @keyframes float-emoji {
+            0%, 100% { transform: translateY(0px) rotate(-5deg); }
+            25% { transform: translateY(-10px) rotate(5deg); }
+            50% { transform: translateY(-5px) rotate(-3deg); }
+            75% { transform: translateY(-15px) rotate(3deg); }
+        }
+
+        /* Custom scrollbar */
+        #notesList::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        #notesList::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+
+        #notesList::-webkit-scrollbar-thumb {
+            background: var(--gradient-1);
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        #notesList::-webkit-scrollbar-thumb:hover {
+            background: var(--gradient-2);
+            transform: scale(1.1);
+        }
+
+        /* Notification enhancements */
+        .notification {
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Video container glow */
+        .video-container {
+            position: relative;
+        }
+
+        .video-container::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: var(--gradient-1);
+            border-radius: 20px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-container:hover::before {
+            opacity: 0.3;
+        }
+
+        /* Typewriter effect for headings */
+        .typewriter {
+            overflow: hidden;
+            border-right: 3px solid rgba(255, 255, 255, 0.7);
+            white-space: nowrap;
+            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: rgba(255, 255, 255, 0.7); }
+        }
+
+        /* Hover sound effect simulation */
+        .sound-hover {
+            position: relative;
+        }
+
+        .sound-hover::after {
+            content: '🔊';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s ease;
+        }
+
+        .sound-hover:hover::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Floating background shapes */
+        .bg-shape {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            animation: float-shape 6s ease-in-out infinite;
+        }
+
+        @keyframes float-shape {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-30px) rotate(120deg); }
+            66% { transform: translateY(15px) rotate(240deg); }
+        }
+
+        /* Success checkmark animation */
+        .checkmark {
+            display: inline-block;
+            animation: checkmark-scale 0.5s ease-in-out;
+        }
+
+        @keyframes checkmark-scale {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Enhanced focus states */
+        .focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.5);
+            border-color: #667eea;
+        }
+
+        /* Breathe animation for important elements */
+        .breathe {
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        /* Fix for current space name visibility */
+        .current-space-badge {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark .current-space-badge {
+            background: rgba(0, 0, 0, 0.3) !important;
+            color: white !important;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Ensure all text in cards is visible */
+        .card-title {
+            color: #1f2937 !important;
+        }
+
+        .dark .card-title {
+            color: white !important;
+        }
+
+        .card-subtitle {
+            color: #6b7280 !important;
+        }
+
+        .dark .card-subtitle {
+            color: #d1d5db !important;
+        }
+    </style>
+</head>
+<body class="transition-all duration-500">
+    <!-- Floating particles background -->
+    <div class="particles">
+        <!-- Particles will be generated by JavaScript -->
+    </div>
+
+    <!-- Floating background shapes -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="bg-shape absolute top-10 left-10 w-20 h-20" style="animation-delay: 0s;"></div>
+        <div class="bg-shape absolute top-32 right-20 w-16 h-16" style="animation-delay: 1s;"></div>
+        <div class="bg-shape absolute bottom-20 left-1/4 w-12 h-12" style="animation-delay: 2s;"></div>
+        <div class="bg-shape absolute bottom-32 right-1/3 w-14 h-14" style="animation-delay: 0.5s;"></div>
+        <div class="bg-shape absolute top-1/2 left-1/2 w-8 h-8" style="animation-delay: 3s;"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="relative z-10 glass p-6 shadow-xl">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="floating-emoji text-4xl">📚</div>
+                <div>
+                    <h1 class="text-3xl font-bold gradient-text font-display">StudyTube</h1>
+                    <p class="text-sm typewriter header-text" style="width: 250px;">Smart Note Taking for Students</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-6">
+                <!-- Theme Toggle -->
+                <div class="flex items-center space-x-3">
+                    <span class="text-xl floating-emoji">☀️</span>
+                    <div onclick="toggleTheme()" class="theme-toggle sound-hover" title="Toggle theme"></div>
+                    <span class="text-xl floating-emoji">🌙</span>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <div class="text-sm">
+                        <span class="header-text opacity-80">Current Space:</span>
+                        <div id="currentSpaceName" class="font-medium current-space-badge px-3 py-1 rounded-full text-xs mt-1 breathe">
+                            Default Space
+                        </div>
+                    </div>
+                    <button onclick="openSpaceManager()" class="button-primary px-6 py-3 text-white rounded-xl font-medium flex items-center space-x-2 sound-hover">
+                        <span>🏠</span>
+                        <span>Spaces</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Spaces Manager Modal -->
+    <div id="spaceManagerModal" class="fixed inset-0 modal hidden z-50 flex items-center justify-center p-6">
+        <div class="card rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto" style="animation: slide-up 0.5s ease-out;">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold card-title mb-2 gradient-text font-display">📁 Study Spaces</h2>
+                        <p class="card-subtitle">Organize your learning materials</p>
+                    </div>
+                    <button onclick="closeSpaceManager()" class="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-all text-2xl sound-hover card-title">×</button>
+                </div>
+
+                <!-- Create New Space -->
+                <div class="mb-8 p-6 glass rounded-2xl">
+                    <h3 class="text-xl font-semibold mb-4 card-title flex items-center">
+                        <span class="mr-2 floating-emoji">✨</span>
+                        Create New Learning Space
+                    </h3>
+                    <div class="flex gap-4">
+                        <input 
+                            type="text" 
+                            id="newSpaceName" 
+                            placeholder="e.g., Mathematics, Physics, Programming..."
+                            class="flex-1 input-field p-4 rounded-xl focus:outline-none focus-ring"
+                        >
+                        <input 
+                            type="text" 
+                            id="newSpaceDescription" 
+                            placeholder="Brief description of this study space..."
+                            class="flex-1 input-field p-4 rounded-xl focus:outline-none focus-ring"
+                        >
+                        <button onclick="createSpace()" class="button-primary px-8 py-4 text-white rounded-xl font-medium hover:shadow-lg transition-all sound-hover">
+                            Create
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Spaces List -->
+                <div id="spacesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Spaces will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="relative z-10 container mx-auto p-6 space-y-8">
+        <!-- Space Info Banner -->
+        <div id="spaceBanner" class="card rounded-2xl p-8 text-center breathe space-banner">
+            <div class="text-6xl mb-4 floating-emoji">🎓</div>
+            <h2 class="text-3xl font-bold text-white mb-2 font-display" id="spaceTitle">Default Space</h2>
+            <p class="text-purple-100 text-lg mb-4" id="spaceDescription">Your default workspace for YouTube notes</p>
+            <div class="flex justify-center items-center space-x-6 text-sm text-purple-200">
+                <div class="flex items-center space-x-2">
+                    <span class="floating-emoji">🎬</span>
+                    <span id="spaceStats">0 videos • 0 notes</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- YouTube URL Input -->
+        <div class="card rounded-2xl p-8">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold card-title mb-2 gradient-text font-display">🎥 Load Your Study Video</h2>
+                <p class="card-subtitle">Paste any YouTube video URL to start taking smart notes</p>
+            </div>
+            <div class="flex gap-4">
+                <input 
+                    type="text" 
+                    id="youtubeUrl" 
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    class="flex-1 input-field p-4 rounded-xl focus:outline-none text-lg focus-ring"
+                >
+                <button 
+                    id="loadVideoBtn" 
+                    onclick="loadVideo()"
+                    class="button-primary px-8 py-4 text-white rounded-xl font-medium text-lg flex items-center space-x-2 min-w-[140px] justify-center sound-hover"
+                >
+                    <span>🚀</span>
+                    <span>Load Video</span>
+                </button>
+            </div>
+            <div id="status" class="mt-4 text-center text-sm"></div>
+        </div>
+
+        <!-- Videos in Current Space -->
+        <div id="videosInSpace" class="card rounded-2xl p-8">
+            <h3 class="text-2xl font-bold mb-6 card-title flex items-center font-display">
+                <span class="mr-3 floating-emoji">📚</span>
+                Your Study Collection
+            </h3>
+            <div id="videosList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="text-center py-12 col-span-full">
+                    <div class="text-6xl mb-4 floating-emoji">🎬</div>
+                    <p class="card-subtitle text-lg font-medium mb-2">No videos in this space yet</p>
+                    <p class="card-subtitle text-sm">Load your first study video above!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video and Notes Container -->
+        <div id="mainContainer" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Video Panel -->
+                <div class="card rounded-2xl p-6">
+                    <div class="video-container aspect-video bg-gray-900 rounded-xl mb-6 overflow-hidden shadow-2xl">
+                        <div id="player" class="w-full h-full"></div>
+                    </div>
+                    <div id="videoInfo" class="text-sm card-subtitle p-4 glass rounded-xl">
+                        <div class="font-medium">Video will appear here</div>
+                    </div>
+                </div>
+
+                <!-- Notes Panel -->
+                <div class="card rounded-2xl overflow-hidden">
+                    <!-- Sticky Note Form -->
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-2xl font-bold card-title flex items-center font-display">
+                                <span class="mr-2 floating-emoji">📝</span>
+                                Smart Notes
+                            </h3>
+                            <div class="flex space-x-3">
+                                <button onclick="exportNotes()" class="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg text-sm font-medium transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 sound-hover">
+                                    📥 Export
+                                </button>
+                                <button onclick="clearAllNotes()" class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-sm font-medium transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 sound-hover">
+                                    🗑️ Clear All
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Add Note Form -->
+                        <div class="p-5 glass rounded-xl space-y-4">
+                            <input 
+                                type="text" 
+                                id="noteTitle" 
+                                placeholder="✏️ Note title (e.g., Key Concept, Important Formula...)"
+                                class="w-full input-field p-3 rounded-xl focus:outline-none focus-ring"
+                            >
+                            <textarea 
+                                id="noteContent" 
+                                placeholder="📖 Write your note here... (Tip: Use timestamps to mark important moments)"
+                                rows="4"
+                                class="w-full input-field p-3 rounded-xl focus:outline-none resize-none focus-ring"
+                            ></textarea>
+                            <div class="flex justify-between items-center">
+                                <button onclick="addTimestamp()" class="flex items-center space-x-2 px-4 py-2 glass rounded-lg card-subtitle hover:bg-gray-200 dark:hover:bg-gray-700 transition-all sound-hover">
+                                    <span class="floating-emoji">⏱️</span>
+                                    <span class="font-medium">Add Timestamp</span>
+                                </button>
+                                <button onclick="saveNote()" class="button-primary px-6 py-2 text-white rounded-xl font-medium flex items-center space-x-2 sound-hover">
+                                    <span>💾</span>
+                                    <span>Save Note</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes List Container -->
+                    <div class="p-6">
+                        <div class="mb-4">
+                            <h4 class="text-lg font-semibold card-title flex items-center">
+                                <span class="mr-2 floating-emoji">📋</span>
+                                Your Study Notes 
+                                <span id="notesCount" class="ml-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold breathe">0</span>
+                            </h4>
+                        </div>
+                        
+                        <!-- Notes List -->
+                        <div id="notesList" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                            <div id="noNotesMessage" class="text-center py-12 glass rounded-xl">
+                                <div class="text-5xl mb-4 floating-emoji">📚</div>
+                                <p class="card-subtitle text-lg font-medium mb-2">Ready to take notes!</p>
+                                <p class="card-subtitle text-sm">Add your first study note above to get started</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript (keeping the same as before but with enhanced notifications) -->
+    <script>
+        // All the previous JavaScript code remains exactly the same...
+        // (I'm keeping it identical to avoid any functional changes)
+        
+        // Global variables
+        let player;
+        let currentVideoId = null;
+        let isPlayerReady = false;
+        let spaces = {};
+        let currentSpaceId = 'default';
+        let isDarkMode = false;
+
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.querySelector('.particles');
+            
+            setInterval(() => {
+                if (document.querySelectorAll('.particle').length < 15) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + 'vw';
+                    particle.style.width = particle.style.height = (Math.random() * 5 + 3) + 'px';
+                    particle.style.animationDuration = (Math.random() * 3 + 5) + 's';
+                    particle.style.animationDelay = Math.random() * 2 + 's';
+                    
+                    particlesContainer.appendChild(particle);
+                    
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, 8000);
+                }
+            }, 1000);
+        }
+
+        // Initialize theme
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                isDarkMode = true;
+                document.documentElement.classList.add('dark');
+            } else {
+                isDarkMode = false;
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        // Toggle theme with enhanced animation
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            
+            // Add a beautiful transition effect
+            document.body.style.transition = 'all 0.5s ease';
+            
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+            
+            // Create a ripple effect
+            createRippleEffect(event);
+            
+            showEnhancedNotification(`🎨 Switched to ${isDarkMode ? 'dark' : 'light'} theme!`, 'success');
+        }
+
+        // Create ripple effect
+        function createRippleEffect(event) {
+            const ripple = document.createElement('div');
+            const rect = event.target.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = event.clientX - rect.left - size / 2;
+            const y = event.clientY - rect.top - size / 2;
+            
+            ripple.style.cssText = `
+                position: absolute;
+                width: ${size}px;
+                height: ${size}px;
+                left: ${x}px;
+                top: ${y}px;
+                background: radial-gradient(circle, rgba(102, 126, 234, 0.6) 0%, transparent 70%);
+                border-radius: 50%;
+                transform: scale(0);
+                animation: ripple 0.6s ease-out;
+                pointer-events: none;
+                z-index: 1000;
+            `;
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes ripple {
+                    to {
+                        transform: scale(4);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            event.target.style.position = 'relative';
+            event.target.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+                style.remove();
+            }, 600);
+        }
+
+        // Initialize default space
+        function initializeDefaultSpace() {
+            const savedSpaces = localStorage.getItem('youtube_spaces');
+            if (savedSpaces) {
+                spaces = JSON.parse(savedSpaces);
+            }
+            
+            if (!spaces.default) {
+                spaces.default = {
+                    id: 'default',
+                    name: 'My Learning Hub',
+                    description: '🎓 Your personal space for educational content',
+                    createdAt: new Date().toISOString(),
+                    videos: {}
+                };
+                saveSpaces();
+            }
+            
+            switchToSpace('default');
+        }
+
+        // YouTube API callback
+        function onYouTubeIframeAPIReady() {
+            console.log('YouTube API is ready!');
+            initializeTheme();
+            initializeDefaultSpace();
+            createParticles();
+        }
+
+        // Enhanced notification system
+        function showEnhancedNotification(message, type = 'info', duration = 4000) {
+            const notification = document.createElement('div');
+            notification.className = `notification fixed top-6 right-6 px-6 py-4 rounded-2xl shadow-2xl z-50 text-white transition-all duration-500 transform translate-x-full max-w-sm`;
+            
+            const colors = {
+                success: 'bg-gradient-to-r from-green-400 via-green-500 to-green-600',
+                error: 'bg-gradient-to-r from-red-400 via-red-500 to-red-600',
+                info: 'bg-gradient-to-r from-blue-400 via-purple-500 to-purple-600'
+            };
+            
+            notification.className += ` ${colors[type] || colors.info}`;
+            
+            // Add checkmark for success
+            const icon = type === 'success' ? '<span class="checkmark">✅</span> ' : 
+                        type === 'error' ? '❌ ' : '💡 ';
+            
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span>${icon}</span>
+                    <span class="font-medium text-sm">${message}</span>
+                </div>
+                <div class="mt-2 w-full bg-white bg-opacity-20 rounded-full h-1 overflow-hidden">
+                    <div class="bg-white h-1 rounded-full animate-shrink" style="animation: shrink ${duration}ms linear"></div>
+                </div>
+            `;
+            
+            // Enhanced CSS for shrink animation
+            if (!document.querySelector('#shrink-style')) {
+                const style = document.createElement('style');
+                style.id = 'shrink-style';
+                style.textContent = `
+                    @keyframes shrink {
+                        from { width: 100%; }
+                        to { width: 0%; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Animate out
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 500);
+            }, duration);
+        }
+
+        // Rest of the JavaScript functions remain exactly the same...
+        function saveSpaces() {
+            localStorage.setItem('youtube_spaces', JSON.stringify(spaces));
+        }
+
+        function switchToSpace(spaceId) {
+            currentSpaceId = spaceId;
+            const space = spaces[spaceId];
+            
+            document.getElementById('currentSpaceName').textContent = space.name;
+            document.getElementById('spaceTitle').textContent = space.name;
+            document.getElementById('spaceDescription').textContent = space.description;
+            
+            const videoCount = Object.keys(space.videos).length;
+            const noteCount = Object.values(space.videos).reduce((total, video) => total + (video.notes ? video.notes.length : 0), 0);
+            document.getElementById('spaceStats').textContent = `${videoCount} videos • ${noteCount} notes`;
+            
+            loadVideosInSpace();
+            
+            if (currentVideoId) {
+                loadNotes();
+            }
+        }
+
+        function createSpace() {
+            const name = document.getElementById('newSpaceName').value.trim();
+            const description = document.getElementById('newSpaceDescription').value.trim();
+            
+            if (!name) {
+                showEnhancedNotification('📝 Please enter a space name', 'error');
+                return;
+            }
+            
+            const spaceId = 'space_' + Date.now();
+            spaces[spaceId] = {
+                id: spaceId,
+                name: name,
+                description: description || '📚 A new learning space',
+                createdAt: new Date().toISOString(),
+                videos: {}
+            };
+            
+            saveSpaces();
+            loadSpacesList();
+            
+            document.getElementById('newSpaceName').value = '';
+            document.getElementById('newSpaceDescription').value = '';
+            
+            showEnhancedNotification(`🎉 Space "${name}" created successfully!`, 'success');
+        }
+
+        function deleteSpace(spaceId) {
+            if (spaceId === 'default') {
+                showEnhancedNotification('❌ Cannot delete the default space', 'error');
+                return;
+            }
+            
+            const space = spaces[spaceId];
+            if (!confirm(`🗑️ Are you sure you want to delete "${space.name}" and all its content?`)) {
+                return;
+            }
+            
+            delete spaces[spaceId];
+            saveSpaces();
+            loadSpacesList();
+            
+            if (currentSpaceId === spaceId) {
+                switchToSpace('default');
+            }
+            
+            showEnhancedNotification('🗑️ Space deleted successfully', 'success');
+        }
+
+        function loadSpacesList() {
+            const spacesList = document.getElementById('spacesList');
+            const spaceItems = Object.values(spaces).map(space => {
+                const videoCount = Object.keys(space.videos).length;
+                const noteCount = Object.values(space.videos).reduce((total, video) => total + (video.notes ? video.notes.length : 0), 0);
+                
+                const emoji = space.id === 'default' ? '🏠' : ['📚', '🎯', '💡', '🧠', '⚡'][Math.floor(Math.random() * 5)];
+                
+                return `
+                    <div class="space-item card rounded-2xl p-6 ${space.id === currentSpaceId ? 'ring-4 ring-purple-400 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20' : ''} cursor-pointer sound-hover">
+                        <div class="text-center mb-4">
+                            <div class="text-4xl mb-2 floating-emoji">${emoji}</div>
+                            <h4 class="font-bold text-xl ${space.id === currentSpaceId ? 'gradient-text' : 'card-title'} mb-2 font-display">${escapeHtml(space.name)}</h4>
+                            <p class="card-subtitle text-sm mb-4">${escapeHtml(space.description)}</p>
+                        </div>
+                        
+                        <div class="flex justify-between items-center text-xs card-subtitle mb-4">
+                            <span>📊 ${videoCount} videos • ${noteCount} notes</span>
+                            <span>📅 ${new Date(space.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <button onclick="switchToSpace('${space.id}'); closeSpaceManager();" 
+                                    class="flex-1 button-primary py-2 px-4 text-white rounded-xl text-sm font-medium hover:shadow-lg transition-all">
+                                ${space.id === currentSpaceId ? '✅ Current' : '🚀 Open'}
+                            </button>
+                            ${space.id !== 'default' ? `
+                                <button onclick="deleteSpace('${space.id}')" 
+                                        class="p-2 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-xl transition-all sound-hover">
+                                    🗑️
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            spacesList.innerHTML = spaceItems;
+        }
+
+        function loadVideosInSpace() {
+            const space = spaces[currentSpaceId];
+            const videosList = document.getElementById('videosList');
+            const videos = Object.values(space.videos);
+            
+            if (videos.length === 0) {
+                videosList.innerHTML = `
+                    <div class="text-center py-12 col-span-full">
+                        <div class="text-6xl mb-4 floating-emoji">🎬</div>
+                        <p class="card-subtitle text-lg font-medium mb-2">No videos in this space yet</p>
+                        <p class="card-subtitle text-sm">Load your first study video above!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            videosList.innerHTML = videos.map(video => `
+                <div class="card rounded-2xl p-4 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 sound-hover">
+                    <div class="video-container aspect-video bg-gray-900 rounded-xl mb-4 overflow-hidden shadow-lg">
+                        <img src="https://img.youtube.com/vi/${video.id}/mqdefault.jpg" 
+                             alt="Video thumbnail" 
+                             class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+                    </div>
+                    <h4 class="font-semibold card-title text-sm mb-3 line-clamp-2">${escapeHtml(video.title || 'Unknown Title')}</h4>
+                    <div class="flex justify-between items-center text-xs card-subtitle mb-4">
+                        <span>📝 ${video.notes ? video.notes.length : 0} notes</span>
+                        <span>📅 ${new Date(video.addedAt).toLocaleDateString()}</span>
+                    </div>
+                    <button onclick="loadVideoById('${video.id}')" 
+                            class="w-full button-primary py-3 text-white rounded-xl font-medium hover:shadow-lg transition-all flex items-center justify-center space-x-2">
+                        <span>▶️</span>
+                        <span>Continue Learning</span>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function loadVideoById(videoId) {
+            document.getElementById('youtubeUrl').value = `https://www.youtube.com/watch?v=${videoId}`;
+            loadVideo();
+        }
+
+        function openSpaceManager() {
+            loadSpacesList();
+            document.getElementById('spaceManagerModal').classList.remove('hidden');
+        }
+
+        function closeSpaceManager() {
+            document.getElementById('spaceManagerModal').classList.add('hidden');
+        }
+
+        function getVideoId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        async function loadVideo() {
+            const url = document.getElementById('youtubeUrl').value.trim();
+            const status = document.getElementById('status');
+            const loadBtn = document.getElementById('loadVideoBtn');
+            
+            if (!url) {
+                status.innerHTML = '<div class="text-red-500 font-medium">❌ Please paste a YouTube URL</div>';
+                return;
+            }
+
+            const videoId = getVideoId(url);
+            if (!videoId) {
+                status.innerHTML = '<div class="text-red-500 font-medium">❌ Invalid YouTube URL format</div>';
+                return;
+            }
+
+            loadBtn.innerHTML = '<span class="loading-dots">🚀 Loading</span>';
+            loadBtn.disabled = true;
+            status.innerHTML = '<div class="text-blue-500 font-medium">⏳ Setting up your study session...</div>';
+
+            try {
+                currentVideoId = videoId;
+                
+                if (player) {
+                    player.destroy();
+                }
+
+                player = new YT.Player('player', {
+                    height: '100%',
+                    width: '100%',
+                    videoId: videoId,
+                    playerVars: {
+                        'playsinline': 1,
+                        'rel': 0,
+                        'modestbranding': 1
+                    },
+                    events: {
+                        'onReady': function(event) {
+                            isPlayerReady = true;
+                            status.innerHTML = '<div class="text-green-500 font-medium">✅ Video loaded! Ready to take notes 📝</div>';
+                            loadBtn.innerHTML = '<span>🚀</span><span>Load Video</span>';
+                            loadBtn.disabled = false;
+                            
+                            document.getElementById('mainContainer').classList.remove('hidden');
+                            
+                            setTimeout(() => {
+                                updateVideoInfo();
+                                saveVideoToSpace();
+                            }, 1000);
+                            
+                            loadNotes();
+                            showEnhancedNotification('🎉 Video ready! Start taking smart notes!', 'success');
+                        },
+                        'onError': function(event) {
+                            status.innerHTML = '<div class="text-red-500 font-medium">❌ Error loading video. Please check the URL.</div>';
+                            loadBtn.innerHTML = '<span>🚀</span><span>Load Video</span>';
+                            loadBtn.disabled = false;
+                            showEnhancedNotification('❌ Error loading video. Please check the URL.', 'error');
+                        }
+                    }
+                });
+            } catch (error) {
+                status.innerHTML = '<div class="text-red-500 font-medium">❌ Error initializing player</div>';
+                loadBtn.innerHTML = '<span>🚀</span><span>Load Video</span>';
+                loadBtn.disabled = false;
+                showEnhancedNotification('❌ Error initializing player', 'error');
+            }
+        }
+
+        function saveVideoToSpace() {
+            if (!currentVideoId || !player || !isPlayerReady) return;
+            
+            const space = spaces[currentSpaceId];
+            if (!space.videos[currentVideoId]) {
+                const videoData = player.getVideoData();
+                space.videos[currentVideoId] = {
+                    id: currentVideoId,
+                    title: videoData.title || 'Unknown Title',
+                    addedAt: new Date().toISOString(),
+                    notes: []
+                };
+                saveSpaces();
+                loadVideosInSpace();
+                switchToSpace(currentSpaceId);
+            }
+        }
+
+        function updateVideoInfo() {
+            if (player && isPlayerReady) {
+                try {
+                    const videoData = player.getVideoData();
+                    const duration = player.getDuration();
+                    document.getElementById('videoInfo').innerHTML = `
+                        <div class="text-center">
+                            <div class="font-bold text-lg card-title mb-2 gradient-text">🎬 ${videoData.title || 'Unknown Title'}</div>
+                            <div class="flex justify-center items-center space-x-6 text-sm card-subtitle">
+                                <span>⏱️ Duration: ${formatTime(duration)}</span>
+                                <span>📺 Video ID: ${currentVideoId}</span>
+                            </div>
+                            <div class="mt-2 text-sm text-purple-600 dark:text-purple-400">
+                                📁 Space: ${spaces[currentSpaceId].name}
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Error getting video info:', error);
+                }
+            }
+        }
+
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function addTimestamp() {
+            if (!player || !isPlayerReady) {
+                showEnhancedNotification('⏳ Video not ready yet. Please wait!', 'error');
+                return;
+            }
+
+            const currentTime = Math.floor(player.getCurrentTime());
+            const timestamp = formatTime(currentTime);
+            const noteContent = document.getElementById('noteContent');
+            
+            const timestampText = `[${timestamp}] `;
+            const currentValue = noteContent.value;
+            const cursorPos = noteContent.selectionStart;
+            
+            noteContent.value = currentValue.substring(0, cursorPos) + timestampText + currentValue.substring(cursorPos);
+            noteContent.focus();
+            noteContent.setSelectionRange(cursorPos + timestampText.length, cursorPos + timestampText.length);
+            
+            showEnhancedNotification(`⏱️ Timestamp ${timestamp} added!`, 'success');
+        }
+
+        function saveNote() {
+            if (!currentVideoId) {
+                showEnhancedNotification('❌ No video loaded', 'error');
+                return;
+            }
+
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+
+            if (!title || !content) {
+                showEnhancedNotification('📝 Please fill in both title and content', 'error');
+                return;
+            }
+
+            const space = spaces[currentSpaceId];
+            if (!space.videos[currentVideoId]) {
+                showEnhancedNotification('❌ Video not found in current space', 'error');
+                return;
+            }
+
+            const note = {
+                id: Date.now().toString(),
+                title: title,
+                content: content,
+                timestamp: extractTimestamp(content),
+                createdAt: new Date().toISOString()
+            };
+
+            space.videos[currentVideoId].notes.push(note);
+            saveSpaces();
+
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            document.getElementById('noteTitle').focus();
+
+            loadNotes();
+            loadVideosInSpace();
+            switchToSpace(currentSpaceId);
+            
+            showEnhancedNotification('🎉 Note saved! Ready for the next one!', 'success');
+        }
+
+        function extractTimestamp(content) {
+            const match = content.match(/\[(\d+:\d{2})\]/);
+            return match ? match[1] : null;
+        }
+
+        function loadNotes() {
+            if (!currentVideoId) return;
+
+            const space = spaces[currentSpaceId];
+            const video = space.videos[currentVideoId];
+            const videoNotes = video ? video.notes : [];
+            
+            displayNotes(videoNotes);
+        }
+
+        function displayNotes(videoNotes) {
+            const notesList = document.getElementById('notesList');
+            const notesCount = document.getElementById('notesCount');
+            const noNotesMessage = document.getElementById('noNotesMessage');
+            
+            notesCount.textContent = videoNotes.length;
+            
+            if (videoNotes.length === 0) {
+                noNotesMessage.style.display = 'block';
+                const existingNotes = notesList.querySelectorAll('.note-item');
+                existingNotes.forEach(note => note.remove());
+                return;
+            }
+            
+            noNotesMessage.style.display = 'none';
+            const existingNotes = notesList.querySelectorAll('.note-item');
+            existingNotes.forEach(note => note.remove());
+
+            const sortedNotes = [...videoNotes].reverse();
+            sortedNotes.forEach((note, index) => {
+                const noteElement = document.createElement('div');
+                noteElement.className = 'note-item card rounded-xl p-5 mb-4';
+                noteElement.style.animation = `slide-up 0.5s ease-out ${index * 0.1}s both`;
+                noteElement.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="font-bold card-title flex-1 text-lg font-display">${escapeHtml(note.title)}</h4>
+                        <div class="flex space-x-2 ml-3">
+                            ${note.timestamp ? `
+                                <button onclick="seekTo('${note.timestamp}')" 
+                                        class="timestamp-btn px-3 py-1 text-xs text-white rounded-lg transition-all font-medium sound-hover"
+                                        title="Jump to ${note.timestamp}">
+                                    ⏰ ${note.timestamp}
+                                </button>
+                            ` : ''}
+                            <button onclick="deleteNote('${note.id}')" 
+                                    class="p-2 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-lg transition-all sound-hover"
+                                    title="Delete note">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                    <p class="card-subtitle whitespace-pre-wrap leading-relaxed mb-3">${escapeHtml(note.content)}</p>
+                    <div class="text-xs card-subtitle flex items-center space-x-4">
+                        <span>📅 ${new Date(note.createdAt).toLocaleString()}</span>
+                        <span>📝 Note #${videoNotes.length - index}</span>
+                    </div>
+                `;
+                
+                notesList.insertBefore(noteElement, noNotesMessage.nextSibling);
+            });
+        }
+
+        function seekTo(timestamp) {
+            if (!player || !isPlayerReady) {
+                showEnhancedNotification('⏳ Player not ready', 'error');
+                return;
+            }
+
+            const parts = timestamp.split(':');
+            const seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            player.seekTo(seconds, true);
+            showEnhancedNotification(`🎯 Jumped to ${timestamp}!`, 'success');
+        }
+
+        function deleteNote(noteId) {
+            if (!confirm('🗑️ Are you sure you want to delete this note?')) return;
+
+            const space = spaces[currentSpaceId];
+            const video = space.videos[currentVideoId];
+            if (video && video.notes) {
+                video.notes = video.notes.filter(note => note.id !== noteId);
+                saveSpaces();
+                loadNotes();
+                loadVideosInSpace();
+                switchToSpace(currentSpaceId);
+                showEnhancedNotification('🗑️ Note deleted successfully!', 'success');
+            }
+        }
+
+        function clearAllNotes() {
+            if (!confirm('🗑️ Are you sure you want to delete ALL notes for this video?')) return;
+
+            const space = spaces[currentSpaceId];
+            const video = space.videos[currentVideoId];
+            if (video) {
+                video.notes = [];
+                saveSpaces();
+                loadNotes();
+                loadVideosInSpace();
+                switchToSpace(currentSpaceId);
+                showEnhancedNotification('🧹 All notes cleared!', 'success');
+            }
+        }
+
+        function exportNotes() {
+            if (!currentVideoId) {
+                showEnhancedNotification('❌ No video loaded', 'error');
+                return;
+            }
+
+            const space = spaces[currentSpaceId];
+            const video = space.videos[currentVideoId];
+            const videoNotes = video ? video.notes : [];
+
+            if (videoNotes.length === 0) {
+                showEnhancedNotification('📝 No notes to export', 'error');
+                return;
+            }
+
+            let exportText = `📚 StudyTube Notes Export\n`;
+            exportText += `==========================================\n\n`;
+            exportText += `📁 Space: ${space.name}\n`;
+            exportText += `🎬 Video: ${video.title}\n`;
+            exportText += `🆔 Video ID: ${currentVideoId}\n`;
+            exportText += `📅 Exported: ${new Date().toLocaleString()}\n`;
+            exportText += `📊 Total Notes: ${videoNotes.length}\n\n`;
+            exportText += `${'='.repeat(50)}\n\n`;
+
+            videoNotes.forEach((note, index) => {
+                exportText += `📝 Note ${index + 1}: ${note.title}\n`;
+                if (note.timestamp) {
+                    exportText += `⏰ Timestamp: ${note.timestamp}\n`;
+                }
+                exportText += `📄 Content:\n${note.content}\n`;
+                exportText += `📅 Created: ${new Date(note.createdAt).toLocaleString()}\n\n`;
+                exportText += `${'-'.repeat(30)}\n\n`;
+            });
+
+            exportText += `\n🎓 Happy studying with StudyTube!\n`;
+
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `StudyTube-${space.name}-${video.title}-Notes.txt`.replace(/[^a-z0-9]/gi, '_');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showEnhancedNotification('📥 Notes exported successfully!', 'success');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add CSS animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slide-up {
+                    from {
+                        opacity: 0;
+                        transform: translateY(30px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+
+            document.getElementById('youtubeUrl').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') loadVideo();
+            });
+            
+            document.getElementById('noteTitle').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') document.getElementById('noteContent').focus();
+            });
+            
+            document.getElementById('noteContent').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && e.ctrlKey) saveNote();
+            });
+
+            document.getElementById('newSpaceName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') createSpace();
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeSpaceManager();
+                }
+            });
+
+            // Add sound effect simulation on hover
+            document.addEventListener('mouseover', function(e) {
+                if (e.target.classList.contains('sound-hover')) {
+                    e.target.style.transform = e.target.style.transform + ' scale(1.02)';
+                }
+            });
+
+            document.addEventListener('mouseout', function(e) {
+                if (e.target.classList.contains('sound-hover')) {
+                    e.target.style.transform = e.target.style.transform.replace(' scale(1.02)', '');
+                }
+            });
+        });
+    </script>
+
+    <!-- Load YouTube API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
